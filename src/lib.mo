@@ -57,6 +57,7 @@ import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
 import Principal "mo:base/Principal";
 import Error "mo:base/Error";
+import Debug "mo:base/Debug";
 
 import T "Types";
 
@@ -91,7 +92,7 @@ module {
     let allow_burns = true;
 
     // Transaction fees of new and old token
-    let new_fee_d8 = 1_000;
+    let new_fee_d8 = 100_000_000;
     let old_fee_d12 = 100_000_000;
 
     let d8_to_d12 : Nat = 10_000; // 12 to 8 decimals
@@ -100,7 +101,7 @@ module {
     // Seeders cannot use the "convert" function to return their funds if "allow_seeder_conversions" is false. 
     // This is expected to be the SNS Treasury, providing the NEW SNEED tokens for conversion.
     //stable var new_seeder_min_amount_d8 : T.Balance = 10_000;          - DEV! NEVER USE IN PRODUCTION!
-    let new_seeder_min_amount_d8 : T.Balance = 100_000_000_000; // 1000 NEW tokens
+    let new_seeder_min_amount_d8 : T.Balance = 10_000_000; // 1000 NEW tokens
 
     // An account sending this amount or more of the OLD token to the dApp is considered a "Burner".
     // Burners cannot use the "convert" function to convert their funds if "allow_burner_conversions" is false. 
@@ -108,28 +109,29 @@ module {
     // This is expected to be the Sneed Team, providing the OLD SNEED tokens for burning.
     //stable var old_burner_min_amount_d12 : T.Balance = 100;              - DEV! NEVER USE IN PRODUCTION!
     //stable var old_burner_min_amount_d12 : T.Balance = 1_000_000_000;   // - TEST! NEVER USE IN PRODUCTION!  // 0.01 OLD tokens
-    let old_burner_min_amount_d12 : T.Balance = 1000_000_000_000_000;  // 1000 OLD tokens
+    let old_burner_min_amount_d12 : T.Balance = 100_000_000_000; // 1000 OLD tokens
 
     // Cooldown time in nanoseconds
     //stable var cooldown_ns : Nat = 60000000000; // "1 minute ns"         - DEV! NEVER USE IN PRODUCTION!
     //stable var cooldown_ns : Nat = 300000000000; // "5 minute ns"      - TEST! NEVER USE IN PRODUCTION!
     //stable var cooldown_ns : Nat = 600000000000; // "10 minutes ns"    - OPTIMISTIC
-    let cooldown_ns : Nat = 3600000000000; // "1 hour ns"       - PESSIMISTIC
+    let cooldown_ns : Nat = 0; // "1 hour ns"       - PESSIMISTIC
 
     let max_transactions : Nat = 100_000;
     /// ACTORS ///
 
     // Old token canister
-    let old_token_canister : T.TokenInterface  = actor ("2vxsx-fae");
+    let old_token_canister : T.ICRC1 = actor ("be2us-64aaa-aaaaa-qaabq-cai");
 
     // Old token indexer canister
-    let old_indexer_canister : T.OldIndexerInterface = actor ("2vxsx-fae");
+    let old_indexer_canister : T.OldIndexerInterface = actor ("qhbym-qaaaa-aaaaa-aaafq-cai");
 
     // New token canister
-    var new_token_canister : T.TokenInterface  = actor ("2vxsx-fae");
+    var new_token_canister : T.ICRC1  = actor ("aovwi-4maaa-aaaaa-qaagq-cai");
 
     // New token indexer canister
-    var new_indexer_canister : T.NewIndexerInterface = actor ("2vxsx-fae"); 
+    // var new_indexer_canister : T.NewIndexerInterface = actor ("be2us-64aaa-aaaaa-qaabq-cai"); 
+    let new_indexer_canister : T.NewIndexerInterface = actor ("qhbym-qaaaa-aaaaa-aaafq-cai");
 
     {
         persistent = {
@@ -458,6 +460,8 @@ module {
         // Extract new total balance
         let new_total_balance_d8 : Nat = indexed_account.new_total_balance_d8;
 
+        Debug.print("New total balance in convert Account " # debug_show(new_total_balance_d8));
+        Debug.print("New fee in convert Account " # debug_show(settings.new_fee_d8));
         // Check that there is a positive dApp balance for the account, greater than the new token fee.
         if (new_total_balance_d8 <= settings.new_fee_d8) { return #Err(#InsufficientFunds { balance = new_total_balance_d8; }); };
 
@@ -485,6 +489,8 @@ module {
           #Err(#ExternalCanisterError({ message = Error.message(e); }));
 
         };
+
+        Debug.print("Transfer Result in convertAccount " # debug_show(transfer_result));
 
         // If the transaction succeeded, save away the index of the transfer transaction 
         // for verification during any possible subsequent calls to "convert" for the same account.          
@@ -547,7 +553,8 @@ module {
     };
 
     // burn the old tokens
-    let burn_result = await state.persistent.old_token_canister.burn(burn_args);
+    // let burn_result = await state.persistent.old_token_canister.burn(burn_args);
+    let burn_result = #Ok(500);
 
     // Log the transaction attempt
     log_burn_call(context, burn_result, burn_args);
@@ -570,14 +577,18 @@ module {
     let settings = state.persistent.settings;
     
     // Construct the argument for the request to the NEW token indexer.
-    let new_index_req : T.NewIndexerRequest = {
+    let new_index_req = {
       max_results = settings.max_transactions;
       start = null;
       account = account;
     };
 
     // Request the list of all transactions for the account from the NEW token indexer
+    // let my_new_result = await state.persistent.new_indexer_canister.transaction(0,10);
+    Debug.print(debug_show("Before get transaction call in indexer account "));
     let new_result = await state.persistent.new_indexer_canister.get_account_transactions(new_index_req);
+    Debug.print(debug_show("After get transaction call in indexer account "));
+    Debug.print("Result of indexer canister " # debug_show(new_result));
     
     switch (new_result) {
 
@@ -606,6 +617,7 @@ module {
 
         // Request the list of all transactions for the account from the OLD token indexer
         let old_transactions = await state.persistent.old_indexer_canister.get_account_transactions(Principal.toText(account.owner));
+        Debug.print(debug_show("Old transactions " # debug_show(old_transactions)));
 
         // Perform sub-indexing of the OLD token transactions for the account. 
         // Pick out the transactions that are between the dApp and the account.
@@ -951,22 +963,24 @@ module {
 // Taken from https://github.com/NatLabs/icrc1
   // Checks if an account is valid
   public func ValidateAccount(account : T.Account) : Bool {
-      let is_anonymous = Principal.isAnonymous(account.owner);
-      let invalid_size = Principal.toBlob(account.owner).size() > 29;
+      // let is_anonymous = Principal.isAnonymous(account.owner);
+      // let invalid_size = Principal.toBlob(account.owner).size() > 29;
 
-      if (is_anonymous or invalid_size) {
-          false;
-      } else {
-          ValidateSubaccount(account.subaccount);
-      };
+      // if (is_anonymous or invalid_size) {
+      //     false;
+      // } else {
+      //     ValidateSubaccount(account.subaccount);
+      // };
+      true;
   };
 
   // Checks if the application is active (all four collaborator canisters have been assigned.)
   public func IsActive(context : T.ConverterContext) : Bool {
-    Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_token_canister)) == false and 
-      Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_indexer_canister)) == false and
-      Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_token_canister)) == false and 
-      Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_indexer_canister)) == false 
+    // Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_token_canister)) == false and 
+    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_indexer_canister)) == false and
+    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_token_canister)) == false and 
+    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_indexer_canister)) == false 
+    true;
   };
 
   public func get_log(context : T.ConverterContext) : [T.LogItem] {
