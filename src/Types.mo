@@ -101,9 +101,11 @@ type NewTransaction = {
     timestamp : Nat64;
 };
 
+type BlockIndex = Nat;
+
 type NewIndexerRequest = {
     max_results : Nat;
-    start : ?Nat;
+    start : ?BlockIndex;
     account : Account;
 };
 
@@ -377,7 +379,7 @@ type ConverterInterface = actor {
 };
 
 type OldIndexerInterface = actor {
-    get_account_transactions(account : Text) : async [OldTransaction];
+    get_account_transactions(request : NewIndexerRequest) : async GetNewTransactionsResult;
     synch_archive_full(token: Text) : async OldSynchStatus;
 };  
 

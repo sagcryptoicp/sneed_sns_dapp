@@ -92,7 +92,7 @@ module {
     let allow_burns = true;
 
     // Transaction fees of new and old token
-    let new_fee_d8 = 100_000_000;
+    let new_fee_d8 = 5_000_000_000;
     let old_fee_d12 = 100_000_000;
 
     let d8_to_d12 : Nat = 10_000; // 12 to 8 decimals
@@ -101,7 +101,7 @@ module {
     // Seeders cannot use the "convert" function to return their funds if "allow_seeder_conversions" is false. 
     // This is expected to be the SNS Treasury, providing the NEW SNEED tokens for conversion.
     //stable var new_seeder_min_amount_d8 : T.Balance = 10_000;          - DEV! NEVER USE IN PRODUCTION!
-    let new_seeder_min_amount_d8 : T.Balance = 10_000_000; // 1000 NEW tokens
+    let new_seeder_min_amount_d8 : T.Balance = 1_000_000_000; // 100000 NEW tokens
 
     // An account sending this amount or more of the OLD token to the dApp is considered a "Burner".
     // Burners cannot use the "convert" function to convert their funds if "allow_burner_conversions" is false. 
@@ -109,7 +109,7 @@ module {
     // This is expected to be the Sneed Team, providing the OLD SNEED tokens for burning.
     //stable var old_burner_min_amount_d12 : T.Balance = 100;              - DEV! NEVER USE IN PRODUCTION!
     //stable var old_burner_min_amount_d12 : T.Balance = 1_000_000_000;   // - TEST! NEVER USE IN PRODUCTION!  // 0.01 OLD tokens
-    let old_burner_min_amount_d12 : T.Balance = 100_000_000_000; // 1000 OLD tokens
+    let old_burner_min_amount_d12 : T.Balance = 10_000_000_000_000; // 100000 OLD tokens
 
     // Cooldown time in nanoseconds
     //stable var cooldown_ns : Nat = 60000000000; // "1 minute ns"         - DEV! NEVER USE IN PRODUCTION!
@@ -121,17 +121,17 @@ module {
     /// ACTORS ///
 
     // Old token canister
-    let old_token_canister : T.ICRC1 = actor ("be2us-64aaa-aaaaa-qaabq-cai");
+    let old_token_canister : T.ICRC1 = actor ("7tx3o-zyaaa-aaaak-aes6q-cai");
 
     // Old token indexer canister
-    let old_indexer_canister : T.OldIndexerInterface = actor ("qhbym-qaaaa-aaaaa-aaafq-cai");
+    let old_indexer_canister : T.OldIndexerInterface = actor ("ke3gt-5qaaa-aaaai-qpfna-cai");
 
     // New token canister
-    var new_token_canister : T.ICRC1  = actor ("aovwi-4maaa-aaaaa-qaagq-cai");
+    var new_token_canister : T.ICRC1  = actor ("ky74c-kqaaa-aaaai-qpfpa-cai");
 
     // New token indexer canister
     // var new_indexer_canister : T.NewIndexerInterface = actor ("be2us-64aaa-aaaaa-qaabq-cai"); 
-    let new_indexer_canister : T.NewIndexerInterface = actor ("qhbym-qaaaa-aaaaa-aaafq-cai");
+    let new_indexer_canister : T.NewIndexerInterface = actor ("kd2ah-qiaaa-aaaai-qpfnq-cai");
 
     {
         persistent = {
@@ -460,8 +460,6 @@ module {
         // Extract new total balance
         let new_total_balance_d8 : Nat = indexed_account.new_total_balance_d8;
 
-        Debug.print("New total balance in convert Account " # debug_show(new_total_balance_d8));
-        Debug.print("New fee in convert Account " # debug_show(settings.new_fee_d8));
         // Check that there is a positive dApp balance for the account, greater than the new token fee.
         if (new_total_balance_d8 <= settings.new_fee_d8) { return #Err(#InsufficientFunds { balance = new_total_balance_d8; }); };
 
@@ -489,8 +487,6 @@ module {
           #Err(#ExternalCanisterError({ message = Error.message(e); }));
 
         };
-
-        Debug.print("Transfer Result in convertAccount " # debug_show(transfer_result));
 
         // If the transaction succeeded, save away the index of the transfer transaction 
         // for verification during any possible subsequent calls to "convert" for the same account.          
@@ -584,11 +580,7 @@ module {
     };
 
     // Request the list of all transactions for the account from the NEW token indexer
-    // let my_new_result = await state.persistent.new_indexer_canister.transaction(0,10);
-    Debug.print(debug_show("Before get transaction call in indexer account "));
     let new_result = await state.persistent.new_indexer_canister.get_account_transactions(new_index_req);
-    Debug.print(debug_show("After get transaction call in indexer account "));
-    Debug.print("Result of indexer canister " # debug_show(new_result));
     
     switch (new_result) {
 
@@ -615,74 +607,85 @@ module {
 
         };
 
-        // Request the list of all transactions for the account from the OLD token indexer
-        let old_transactions = await state.persistent.old_indexer_canister.get_account_transactions(Principal.toText(account.owner));
-        Debug.print(debug_show("Old transactions " # debug_show(old_transactions)));
-
-        // Perform sub-indexing of the OLD token transactions for the account. 
-        // Pick out the transactions that are between the dApp and the account.
-        // Sum up the amount of OLD tokens sent from the account to the dApp
-        // Sum up the amount of OLD tokens sent from the dApp to the account 
-        // (refunds not supported by dApp, but such transactions if they exist must be counted)
-        let old_balance_result = IndexOldBalance(context, old_transactions);
-
-        let old_balance_d12 = old_balance_result.old_balance_d12;
-
-        // Convert the OLD token balance from d12 to d8. 
-        let old_balance_d8 : T.Balance = Int.abs(old_balance_d12 / settings.d8_to_d12);
-        
-        // Perform sub-indexing of the NEW token transactions for the account. 
-        // Pick out the transactions that are between the dApp and the account.
-        // Sum up the amount of NEW tokens sent from the dApp to the account (converted tokens).
-        // Sum up the amount of NEW tokens sent from the account to the dApp (seeding).
-        let new_balance_result = IndexNewBalance(context, new_transactions.transactions);
-
-        let new_sent_acct_to_dapp_d8 = new_balance_result.new_sent_acct_to_dapp_d8;
-        let new_sent_dapp_to_acct_d8 = new_balance_result.new_sent_dapp_to_acct_d8;
-
-        // total NEW token balance is:
-        // OLD tokens sent to dApp - OLD tokens sent to account + NEW tokens sent to dApp - NEW tokens sent to account
-        // or: OLD tokens deposited minus OLD token withdrawn plus NEW tokens deposited minus NEW tokens withdrawn.
-        var new_total_balance_d8 = old_balance_d8 + new_sent_acct_to_dapp_d8;
-        var new_total_balance_underflow_d8 = 0;
-
-        // If the account has already had some OLD tokens converted into NEW tokens (i.e. NEW tokens have been sent 
-        // from the dApp to the account) then we subtract this amount from the "NEW token total balance" for the account.
-        if (new_total_balance_d8 >= new_sent_dapp_to_acct_d8) {
-          new_total_balance_d8 := new_total_balance_d8 - new_sent_dapp_to_acct_d8;
-        } else {
-          new_total_balance_underflow_d8 := new_sent_dapp_to_acct_d8 - new_total_balance_d8;
-          new_total_balance_d8 := 0;
+        let old_index_req = {
+          max_results = settings.max_transactions;
+          start = null;
+          account = account;
         };
 
-        let new_sent_dapp_to_acct_d12 : T.Balance = Int.abs(new_sent_dapp_to_acct_d8 * settings.d8_to_d12);
-        
-        // Return the results of the account indexing operation:
-        return #Ok({
-          new_total_balance_d8 = new_total_balance_d8;          
-          old_balance_d12 = old_balance_d12;
+        // Request the list of all transactions for the account from the OLD token indexer
+        let old_results = await state.persistent.old_indexer_canister.get_account_transactions(old_index_req);
 
-          new_total_balance_underflow_d8 = new_total_balance_underflow_d8;          
-          old_balance_underflow_d12 = old_balance_result.old_balance_underflow_d12;
-          
-          new_sent_acct_to_dapp_d8 = new_sent_acct_to_dapp_d8;
-          new_sent_dapp_to_acct_d8 = new_sent_dapp_to_acct_d8;
-          old_sent_acct_to_dapp_d12 = old_balance_result.old_sent_acct_to_dapp_d12;
-          old_sent_dapp_to_acct_d12 = old_balance_result.old_sent_dapp_to_acct_d12;
-          
-          is_seeder = new_balance_result.is_seeder;
-          is_burner = old_balance_result.is_burner;
-          old_latest_send_found = old_balance_result.old_latest_send_found;
-          old_latest_send_txid = old_balance_result.old_latest_send_txid;
-          new_latest_send_found = new_balance_result.new_latest_send_found;
-          new_latest_send_txid = new_balance_result.new_latest_send_txid;
-        }); 
+        switch(old_results){
+          case (#Err({ message })) { return #Err(#ExternalCanisterError({ message = message })); };
+          case (#Ok(old_transactions)) {
+
+            // Perform sub-indexing of the OLD token transactions for the account. 
+            // Pick out the transactions that are between the dApp and the account.
+            // Sum up the amount of OLD tokens sent from the account to the dApp
+            // Sum up the amount of OLD tokens sent from the dApp to the account 
+            // (refunds not supported by dApp, but such transactions if they exist must be counted)
+            let old_balance_result = IndexOldBalance(context, old_transactions.transactions);
+
+            let old_balance_d12 = old_balance_result.old_balance_d12;
+
+            // Convert the OLD token balance from d12 to d8. 
+            let old_balance_d8 : T.Balance = Int.abs(old_balance_d12 / settings.d8_to_d12);
+            
+            // Perform sub-indexing of the NEW token transactions for the account. 
+            // Pick out the transactions that are between the dApp and the account.
+            // Sum up the amount of NEW tokens sent from the dApp to the account (converted tokens).
+            // Sum up the amount of NEW tokens sent from the account to the dApp (seeding).
+            let new_balance_result = IndexNewBalance(context, new_transactions.transactions);
+
+            let new_sent_acct_to_dapp_d8 = new_balance_result.new_sent_acct_to_dapp_d8;
+            let new_sent_dapp_to_acct_d8 = new_balance_result.new_sent_dapp_to_acct_d8;
+
+            // total NEW token balance is:
+            // OLD tokens sent to dApp - OLD tokens sent to account + NEW tokens sent to dApp - NEW tokens sent to account
+            // or: OLD tokens deposited minus OLD token withdrawn plus NEW tokens deposited minus NEW tokens withdrawn.
+            var new_total_balance_d8 = old_balance_d8 + new_sent_acct_to_dapp_d8;
+            var new_total_balance_underflow_d8 = 0;
+
+            // If the account has already had some OLD tokens converted into NEW tokens (i.e. NEW tokens have been sent 
+            // from the dApp to the account) then we subtract this amount from the "NEW token total balance" for the account.
+            if (new_total_balance_d8 >= new_sent_dapp_to_acct_d8) {
+              new_total_balance_d8 := new_total_balance_d8 - new_sent_dapp_to_acct_d8;
+            } else {
+              new_total_balance_underflow_d8 := new_sent_dapp_to_acct_d8 - new_total_balance_d8;
+              new_total_balance_d8 := 0;
+            };
+
+            let new_sent_dapp_to_acct_d12 : T.Balance = Int.abs(new_sent_dapp_to_acct_d8 * settings.d8_to_d12);
+            
+            // Return the results of the account indexing operation:
+            return #Ok({
+              new_total_balance_d8 = new_total_balance_d8;          
+              old_balance_d12 = old_balance_d12;
+
+              new_total_balance_underflow_d8 = new_total_balance_underflow_d8;          
+              old_balance_underflow_d12 = old_balance_result.old_balance_underflow_d12;
+              
+              new_sent_acct_to_dapp_d8 = new_sent_acct_to_dapp_d8;
+              new_sent_dapp_to_acct_d8 = new_sent_dapp_to_acct_d8;
+              old_sent_acct_to_dapp_d12 = old_balance_result.old_sent_acct_to_dapp_d12;
+              old_sent_dapp_to_acct_d12 = old_balance_result.old_sent_dapp_to_acct_d12;
+              
+              is_seeder = new_balance_result.is_seeder;
+              is_burner = old_balance_result.is_burner;
+              old_latest_send_found = old_balance_result.old_latest_send_found;
+              old_latest_send_txid = old_balance_result.old_latest_send_txid;
+              new_latest_send_found = new_balance_result.new_latest_send_found;
+              new_latest_send_txid = new_balance_result.new_latest_send_txid;
+            }); 
+          }
+        };
       };
     }
   };
 
   // Index the OLD token balance of the account. 
-  public func IndexOldBalance(context : T.ConverterContext, transactions : [T.OldTransaction]) : T.IndexOldBalanceResult {
+  public func IndexOldBalance(context : T.ConverterContext, transactions : [T.NewTransactionWithId]) : T.IndexOldBalanceResult {
 
     // Extract the account from the context
     let account = context.account;
@@ -717,13 +720,13 @@ module {
 
       // Check if the transaction index matches the most recent OLD token transfer transaction from the dApp to the account (if any).
       // If so we set old_latest_send_found to true.
-      switch (old_latest_send_txid) {
-        case (null) { /* do nothing */ };
-        case (?txid) { if (tx.index == txid) { old_latest_send_found := true; }; };
-      };
+      // switch (old_latest_send_txid) {
+      //   case (null) { /* do nothing */ };
+      //   case (?txid) { if (tx.index == txid) { old_latest_send_found := true; }; };
+      // };
 
       // Check if it is a transaction of type "transfer"
-      switch(tx.transfer){
+      switch(tx.transaction.transfer){
 
         case (null) { /* do nothing for mint/burn*/ };
       
