@@ -98,74 +98,7 @@ shared ({ caller = _initializer_ }) actor class SneedConverter() : async T.Conve
         canister_id = Principal.toText(Principal.fromActor(this));
       };
     };
-
-    public composite query func fetchOldBalance(account : T.Account) : async T.IndexOldBalanceResult {
-        let settings = state.persistent.settings;
-
-        var old_sent_acct_to_dapp_d12 : T.Balance = 0;
-        var old_sent_dapp_to_acct_d12 : T.Balance = 0;
-        var old_latest_send_txid : ?T.TxIndex = state.ephemeral.old_latest_sent_txids.get(account.owner);
-        var old_latest_send_found = false;
-        let sneed_converter_dapp = sneed_converter_account();
-
-        var offset : Nat = 0;
-        let limit : Nat = 25000;
-        var totalElements : Nat = 0;
-        var hasMore = true;
-
-        while (hasMore) {
-            let result = await state.persistent.old_token_canister.transaction(offset, limit);
-            
-            totalElements := result.totalElements;
-            
-            for (tx in result.content.vals()) {
-                if (tx.from == Principal.toText(account.owner) or tx.to == Principal.toText(account.owner)) {
-                    switch (tx.kind) {
-                        case (#Transfer) {
-                            if (tx.from == Principal.toText(account.owner) and tx.to == Principal.toText(sneed_converter_dapp.owner)) {
-                                old_sent_acct_to_dapp_d12 := old_sent_acct_to_dapp_d12 + tx.amount;
-                            } else if (tx.from == Principal.toText(sneed_converter_dapp.owner) and tx.to == Principal.toText(account.owner)) {
-                                old_sent_dapp_to_acct_d12 := old_sent_dapp_to_acct_d12 + tx.amount;
-                            }
-                        };
-                        case _ {}
-                    };
-                };
-
-                switch (old_latest_send_txid) {
-                    case (?txid) {
-                        if (txid == offset + result.content.size() - 1) {
-                            old_latest_send_found := true;
-                        }
-                    };
-                    case (null) {}
-                };
-            };
-
-            offset := offset + result.content.size();
-            hasMore := offset < totalElements;
-        };
-
-        var old_balance_d12 = 0;
-        var old_balance_underflow_d12 = 0;
-        if (old_sent_acct_to_dapp_d12 >= old_sent_dapp_to_acct_d12) {
-            old_balance_d12 := old_sent_acct_to_dapp_d12 - old_sent_dapp_to_acct_d12;
-        } else {
-            old_balance_underflow_d12 := old_sent_dapp_to_acct_d12 - old_sent_acct_to_dapp_d12;
-        };
-
-        let is_burner = old_sent_acct_to_dapp_d12 >= settings.old_burner_min_amount_d12; 
-
-        return {
-            old_balance_d12 = old_balance_d12;
-            old_balance_underflow_d12 = old_balance_underflow_d12;
-            old_sent_acct_to_dapp_d12 = old_sent_acct_to_dapp_d12;
-            old_sent_dapp_to_acct_d12 = old_sent_dapp_to_acct_d12;
-            is_burner = is_burner;
-            old_latest_send_found = old_latest_send_found;
-            old_latest_send_txid = old_latest_send_txid;
-        };
-    };
+    
 
 // PRIVATE FUNCTIONS
 

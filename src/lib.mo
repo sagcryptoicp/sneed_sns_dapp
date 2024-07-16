@@ -538,19 +538,24 @@ module {
     // Ensure burns are allowed.
     if (settings.allow_burns == false) { return #Err(#BurnsNotAllowed); };
 
+    let toAccount : T.Account = {
+      owner = Principal.fromText("aaaaa-aa");
+      subaccount = null;
+    };
+
     // Create the arguments for the burn transaction request.                
-    let burn_args : T.BurnArgs = {
+    let burn_args : T.TransferArgs = {
       from_subaccount = null;
+      to = toAccount;
       amount = amount_d12;
-      fee = null;
+      fee = ?settings.old_fee_d12;
       memo = ?Blob.fromArray([1,3,3,7]);
 
       created_at_time = null;
     };
 
     // burn the old tokens
-    // let burn_result = await state.persistent.old_token_canister.burn(burn_args);
-    let burn_result = #Ok(500);
+    let burn_result = await state.persistent.old_token_canister.icrc1_transfer(burn_args);
 
     // Log the transaction attempt
     log_burn_call(context, burn_result, burn_args);
