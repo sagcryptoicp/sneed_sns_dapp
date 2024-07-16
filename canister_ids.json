@@ -1,10 +1,10 @@
 {
   "sneed_dapp_backend": {
-    "ic": "5ceyv-syaaa-aaaag-qc43q-cai",
+    "ic": "kw5rk-raaaa-aaaai-qpfoa-cai",
     "local": "bd3sg-teaaa-aaaaa-qaaba-cai"
   },
   "sneed_dapp_frontend": {
-    "ic": "4pk43-5qaaa-aaaag-qc44a-cai",
+    "ic": "kr4x6-4yaaa-aaaai-qpfoq-cai",
     "local": "bkyz2-fmaaa-aaaaa-qaaaq-cai"
   },
   "sneed_dapp_new_indexer_mock": {

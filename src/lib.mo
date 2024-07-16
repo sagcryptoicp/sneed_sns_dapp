@@ -1019,30 +1019,28 @@ module {
 // Taken from https://github.com/NatLabs/icrc1
   // Checks if an account is valid
   public func ValidateAccount(account : T.Account) : Bool {
-      // let is_anonymous = Principal.isAnonymous(account.owner);
-      // let invalid_size = Principal.toBlob(account.owner).size() > 29;
+      let is_anonymous = Principal.isAnonymous(account.owner);
+      let invalid_size = Principal.toBlob(account.owner).size() > 29;
 
-      // if (is_anonymous or invalid_size) {
-      //     false;
-      // } else {
-      //     ValidateSubaccount(account.subaccount);
-      // };
-      true;
+      if (is_anonymous or invalid_size) {
+          false;
+      } else {
+          ValidateSubaccount(account.subaccount);
+      };
   };
 
   // Checks if the application is active (all four collaborator canisters have been assigned.)
   public func IsActive(context : T.ConverterContext) : Bool {
-    // Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_token_canister)) == false and 
-    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_indexer_canister)) == false and
-    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_token_canister)) == false and 
-    //   Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_indexer_canister)) == false 
-    true;
+      Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_token_canister)) == false and 
+      Principal.isAnonymous(Principal.fromActor(context.state.persistent.old_indexer_canister)) == false and
+      Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_token_canister)) == false and 
+      Principal.isAnonymous(Principal.fromActor(context.state.persistent.new_indexer_canister)) == false 
   };
 
   public func get_log(context : T.ConverterContext) : [T.LogItem] {
     
     // Ensure only admins can call this function
-    //if (not IsAdmin(context)) { return []; };
+    if (not IsAdmin(context)) { return []; };
 
     Buffer.toArray(context.state.ephemeral.log);
 
@@ -1051,7 +1049,7 @@ module {
   public func get_log_size(context : T.ConverterContext) : Nat {
     
     // Ensure only admins can call this function
-    //if (not IsAdmin(context)) { return 0; };
+    if (not IsAdmin(context)) { return 0; };
 
     context.state.ephemeral.log.size();
 
@@ -1060,7 +1058,7 @@ module {
   public func get_log_page(context : T.ConverterContext, start : Nat, length : Nat) : [T.LogItem] {
     
     // Ensure only admins can call this function
-    //if (not IsAdmin(context)) { return []; };
+    if (not IsAdmin(context)) { return []; };
 
     let log = context.state.ephemeral.log;
     let size = log.size();

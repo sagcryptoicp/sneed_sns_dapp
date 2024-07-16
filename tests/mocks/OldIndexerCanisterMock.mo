@@ -8,9 +8,9 @@ import TestUtil "../utils/TestUtil";
 
 shared actor class OldIndexerMock() : async T.OldIndexerInterface = {
 
-    public func get_account_transactions(request : T.NewIndexerRequest) : async [T.OldTransaction] {
+    public func get_account_transactions(request : T.NewIndexerRequest) : async T.GetNewTransactionsResult {
 
-        let acct : T.Account = {
+        let account : T.Account = {
             owner = Principal.fromText(request.account.owner);
             subaccount = null;
         };
@@ -135,7 +135,7 @@ shared actor class OldIndexerMock() : async T.OldIndexerInterface = {
             return [ TestUtil.get_old_tx(100, 1000000000000, acct, dapp) ]; // 1 old token
         };
 
-        [];
+        #Ok(1);
     };
 
     public func synch_archive_full(token: Text) : async T.OldSynchStatus {
