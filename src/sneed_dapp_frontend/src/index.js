@@ -1,8 +1,7 @@
 import { sneed_dapp_backend } from "../../declarations/sneed_dapp_backend";
 import { Principal } from "@dfinity/principal";
 
-var d8 = Number(10000);
-var d12 = Number(100000000);
+var d8 = Number(100000000);
 
 function toJsonString(o) {
   return JSON.stringify(o, (key, value) =>
