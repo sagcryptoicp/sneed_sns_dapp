@@ -548,7 +548,7 @@ module {
       from_subaccount = null;
       to = toAccount;
       amount = amount_d12;
-      fee = ?settings.old_fee_d12;
+      fee = null;
       memo = ?Blob.fromArray([1,3,3,7]);
 
       created_at_time = null;
