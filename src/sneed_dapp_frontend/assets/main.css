@@ -59,6 +59,10 @@ input {
   margin: 0 auto;
 }
 
+#subaccount{
+  display: none;
+}
+
 button {
   padding: 10px 20px;
   background-color: var(--primary-color);
