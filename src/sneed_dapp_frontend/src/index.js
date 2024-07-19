@@ -108,9 +108,7 @@ document.getElementById("convert").addEventListener("click", async (e) => {
 
     } else {
 
-      document.getElementById("result").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
-        <br>
-                                                     New(SNS) DOGMI : ${toJsonString(result)}`;
+      document.getElementById("result").innerHTML = toJsonString(result);
 
     }
   
@@ -153,7 +151,9 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 
     }
 
-    document.getElementById("balance").innerHTML = balance + " DOGMI <img src='dogcoin.png' class='loading-gif'/>";
+    document.getElementById("balance").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
+        <br>
+                                                     New(SNS) DOGMI : ${toJsonString(result)}`;
 
   } else {
 
