@@ -151,9 +151,9 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 
     }
 
-    document.getElementById("balance").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString((balance_d8)*BigInt(10000))}
+    document.getElementById("balance").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString((balance)*(10000))}
         <br>
-                                                     New(SNS) DOGMI(Convertable) : ${toJsonString(balance_d8)}`;
+                                                     New(SNS) DOGMI(Convertable) : ${toJsonString(balance)}`;
 
   } else {
 

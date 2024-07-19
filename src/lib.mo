@@ -124,14 +124,14 @@ module {
     let old_token_canister : T.ICRC1 = actor ("7tx3o-zyaaa-aaaak-aes6q-cai");
 
     // Old token indexer canister
-    let old_indexer_canister : T.OldIndexerInterface = actor ("ke3gt-5qaaa-aaaai-qpfna-cai");
+    let old_indexer_canister : T.OldIndexerInterface = actor ("ke3gt-5qaaa-aaaai-qpfna-cai"); // we are not using this in over DOGMI conversion.
 
     // New token canister
-    var new_token_canister : T.ICRC1  = actor ("pdfat-maaaa-aaaai-qpfqa-cai");
+    var new_token_canister : T.ICRC1  = actor ("2vxsx-fae");
 
     // New token indexer canister
     // var new_indexer_canister : T.NewIndexerInterface = actor ("be2us-64aaa-aaaaa-qaabq-cai"); 
-    let new_indexer_canister : T.NewIndexerInterface = actor ("kd2ah-qiaaa-aaaai-qpfnq-cai");
+    let new_indexer_canister : T.NewIndexerInterface = actor ("2vxsx-fae");
 
     {
         persistent = {
