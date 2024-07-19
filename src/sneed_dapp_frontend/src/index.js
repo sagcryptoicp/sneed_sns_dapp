@@ -102,15 +102,15 @@ document.getElementById("convert").addEventListener("click", async (e) => {
 
       } else {
 
-        document.getElementById("result").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
-        <br>
-                                                       New(SNS) DOGMI : ${toJsonString(result)}`;
+        document.getElementById("result").innerHTML = toJsonString(result);
   
       }
 
     } else {
 
-      document.getElementById("result").innerHTML = toJsonString(result);
+      document.getElementById("result").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
+        <br>
+                                                     New(SNS) DOGMI : ${toJsonString(result)}`;
 
     }
   
@@ -143,7 +143,7 @@ document.querySelector("form").addEventListener("submit", async (e) => {
   const ok = result["Ok"];
   if (ok) {
 
-    const balance_d8 = ok["new_total_balance"];
+    const balance_d8 = ok["new_total_balance_d8"];
     var balance = 0;
 
     if (balance_d8 > 0) {
