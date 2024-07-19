@@ -102,7 +102,9 @@ document.getElementById("convert").addEventListener("click", async (e) => {
 
       } else {
 
-        document.getElementById("result").innerHTML = toJsonString(result);
+        document.getElementById("result").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
+        <br>
+                                                       New(SNS) DOGMI : ${toJsonString(result)}`;
   
       }
 
