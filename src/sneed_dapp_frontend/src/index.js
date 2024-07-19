@@ -151,9 +151,9 @@ document.querySelector("form").addEventListener("submit", async (e) => {
 
     }
 
-    document.getElementById("balance").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString(result*10000)}
+    document.getElementById("balance").innerHTML = `Old(non-SNS) DOGMI : ${toJsonString((balance_d8)*BigInt(10000))}
         <br>
-                                                     New(SNS) DOGMI : ${toJsonString(result)}`;
+                                                     New(SNS) DOGMI(Convertable) : ${toJsonString(balance_d8)}`;
 
   } else {
 
@@ -170,6 +170,7 @@ let status = await sneed_dapp_backend.get_status();
 let active = status["active"];
 if (active) {
   document.getElementById("submit_button").removeAttribute("disabled"); 
+  document.getElementById("convert").removeAttribute("disabled"); 
   document.getElementById("dapp_status").innerHTML = "Active."; 
   document.getElementById("dapp_id").innerText = status["canister_id"]; 
   document.getElementById("main_div").setAttribute("class", "active");   
