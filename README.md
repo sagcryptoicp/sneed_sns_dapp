@@ -1,42 +1,42 @@
-# DoGMI Token Conversion
+# DOGMI Token Conversion
 
-This repository contains the modified code for converting old DoGMI tokens to new DoGMI tokens on the Internet Computer (IC) platform, managed through the Sneed_dapp_backend canister.
+This repository contains the modified code for converting old DOGMI tokens to new DOGMI tokens on the Internet Computer (IC) platform, managed through the dogmi_sneed_sns_dapp canister.
 
 ## Overview
 
-The DoGMI token conversion process involves transferring old DoGMI tokens to the Sneed_dapp_backend canister, verifying balances, and converting them to new DoGMI tokens.
+The DOGMI token conversion process involves transferring old DOGMI tokens to the dogmi_sneed_sns_dapp canister, verifying balances, and converting them to new DOGMI tokens.
 
 ## Process Steps
 
-1. **Token Acquisition**: Ensure you have old DoGMI tokens for conversion.
+1. **Token Acquisition**: Ensure you have old DOGMI tokens for conversion.
 
-2. **Old DoGMI Token**: The old DoGMI token canister is already deployed.
+2. **Old DOGMI Token**: The old DOGMI token canister is already deployed.
    - **Old Token Canister**: `7tx3o-zyaaa-aaaak-aes6q-cai`
 
-3. **New DoGMI Token and Indexer Deployment**: The new DoGMI token and its indexer will be deployed during the SNS launch.
+3. **New DOGMI Token and Indexer Deployment**: The new DOGMI token and its indexer will be deployed during the SNS launch.
 
-4. **Sneed_dapp_backend Configuration and Modification**:
-   - **Sneed Dapp Backend Canister**: `kw5rk-raaaa-aaaai-qpfoa-cai`
+4. **dogmi_sneed_sns_dapp Configuration and Modification**:
+   - **DOGMI Sneed Dapp Backend Canister**: `kw5rk-raaaa-aaaai-qpfoa-cai`
    - Removed the test folder.
-   - Modified the `OldTokenType` to match the standards and methods of the old DoGMI tokens with custom transactions.
+   - Modified the `OldTokenType` to match the standards and methods of the old DOGMI tokens with custom transactions.
    - Modified the `NewTokenType` to ICRC1.
-   - Modified some init arguments according to DoGMI conversion requirements.
+   - Modified some init arguments according to DOGMI conversion requirements.
 
-5. **Old Token Transfer**: Transfer the required amount of old DoGMI tokens from your account to the Sneed_dapp_backend canister.
+5. **Old Token Transfer**: Transfer the required amount of old DOGMI tokens from your account to the dogmi_sneed_sns_dapp canister.
    - Important: Transfer more than 500,000 old tokens to ensure successful conversion, as the new token fee is 50 new tokens.
 
-6. **New Token Allocation**: Transfer the necessary amount of new DoGMI tokens to the Sneed_dapp_backend canister. This amount should be sufficient to cover all potential conversions. This will be done through a proposal after the SNS launch.
+6. **New Token Allocation**: Transfer the necessary amount of new DOGMI tokens to the dogmi_sneed_sns_dapp canister. This amount should be sufficient to cover all potential conversions. This will be done through a proposal after the SNS launch.
 
-7. **Balance Verification**: Call the check balance after providing your principal ID on the DoGMI Token Converter frontend.
-   - **Frontend URL**: [DoGMI Token Converter](https://kr4x6-4yaaa-aaaai-qpfoq-cai.icp0.io/)
+7. **Balance Verification**: Call the check balance after providing your principal ID on the DOGMI Token Converter frontend.
+   - **Frontend URL**: [DOGMI Token Converter](https://kr4x6-4yaaa-aaaai-qpfoq-cai.icp0.io/)
 
-8. **Token Conversion**: Click the convert button to initiate the conversion process. This function will transfer new DoGMI tokens to your account based on your old token balance.
+8. **Token Conversion**: Click the convert button to initiate the conversion process. This function will transfer new DOGMI tokens to your account based on your old token balance.
 
-9. **Final Balance Check**: Check your balance of new DoGMI tokens.
+9. **Final Balance Check**: Check your balance of new DOGMI tokens.
 
 ## Major Changes in Conversion Process
 
-Due to the old DoGMI token's lack of an index canister and incomplete support for ICRC1, we modified the IndexAccount method:
+Due to the old DOGMI token's lack of an index canister and incomplete support for ICRC1, we modified the IndexAccount method:
 - The previous method fetched all old token transactions using an indexer and then called `IndexOldBalance` to get the required old balance.
 - We wrote a custom method `fetchOldBalance`, which iteratively calls the transaction methods of the old token canister, fetching 25,000 transactions in each iteration. It calculates the old balances based on fetched transactions and returns the required old balances.
 
