@@ -115,7 +115,7 @@ module {
     //stable var cooldown_ns : Nat = 60000000000; // "1 minute ns"         - DEV! NEVER USE IN PRODUCTION!
     //stable var cooldown_ns : Nat = 300000000000; // "5 minute ns"      - TEST! NEVER USE IN PRODUCTION!
     //stable var cooldown_ns : Nat = 600000000000; // "10 minutes ns"    - OPTIMISTIC
-    let cooldown_ns : Nat = 0; // "1 hour ns"       - PESSIMISTIC
+    let cooldown_ns : Nat = 3600000000000; // "1 hour ns"       - PESSIMISTIC
 
     let max_transactions : Nat = 100_000;
     /// ACTORS ///
@@ -127,10 +127,10 @@ module {
     let old_indexer_canister : T.OldIndexerInterface = actor ("ke3gt-5qaaa-aaaai-qpfna-cai"); // we are not using this in over DOGMI conversion.
 
     // New token canister
-    var new_token_canister : T.ICRC1  = actor ("2vxsx-fae");
+    var new_token_canister : T.ICRC1  = actor ("pdfat-maaaa-aaaai-qpfqa-cai");//2vxsx-fae
 
     // New token indexer canister
-    let new_indexer_canister : T.NewIndexerInterface = actor ("2vxsx-fae");
+    let new_indexer_canister : T.NewIndexerInterface = actor ("kd2ah-qiaaa-aaaai-qpfnq-cai");
 
     {
         persistent = {
